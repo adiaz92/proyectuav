@@ -1,0 +1,35 @@
+<!-- 
+    Master on Robotics : Unmanned Aerial Robots 
+
+    Homework 3 includes three files 
+        => starts up the basic simulation 
+        => runs your solution
+        => starts an autonomous mission to fly through a sequence of waypoints defined in "exercise"
+
+  --> 
+<launch>
+
+	<arg name="exercise" default="$(find rotors_exercise)/resource/exercise1.txt"/>
+
+	<arg name="mav_name" default="firefly"/>
+  <arg name="world_name" default="basic"/>
+  <arg name="paused" default="true"/>
+
+  <include file="$(find rotors_exercise)/launch/mav_homework3_simulation.launch"> 
+  		<arg name="mav_name" value="$(arg mav_name)" />
+  		<arg name="world_name" value="$(arg world_name)" />
+  		<arg name="paused" value="$(arg paused)" />
+	</include>
+
+  <include file="$(find rotors_exercise)/launch/mav_homework3_solution.launch"/> 
+
+  <include file="$(find rotors_exercise)/launch/mav_homework3_mission.launch"> 
+  		<arg name="mav_name" value="$(arg mav_name)" />
+  		<arg name="exercise" value="$(arg exercise)" />
+  </include>
+
+  <include file="$(find rotors_exercise)/launch/mav_homework3_visualize.launch"> 
+      <!--arg name="mav_name" value="$(arg mav_name)" /-->
+  </include>
+
+</launch>

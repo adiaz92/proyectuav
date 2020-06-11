@@ -1,0 +1,5 @@
+<launch>
+    <node name="path" pkg="rotors_exercise" type="path_node" clear_params="true" output="screen">
+      
+    </node>
+</launch>

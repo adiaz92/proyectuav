@@ -1,0 +1,7 @@
+<launch>
+
+  	<include file="$(find rotors_exercise)/launch/paths.launch"/> 
+
+	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find rotors_exercise)/rviz/rotors_exercise.rviz" />
+
+</launch>

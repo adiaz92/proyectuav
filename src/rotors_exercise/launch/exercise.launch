@@ -1,0 +1,36 @@
+<!-- 
+    Master on Robotics : Unmanned Aerial Robots 
+
+    Homework 4 includes three files 
+        => starts up the basic simulation without a position controller
+        => runs your solution
+        => starts an autonomous mission to fly through a sequence of waypoints defined in "exercise"
+
+  --> 
+<launch>
+
+  <arg name="exercise" default="$(find rotors_exercise)/resource/square.txt"/>
+
+  <arg name="mav_name" default="firefly"/>
+  <arg name="world_name" default="basic"/>
+  <arg name="paused" default="false"/>
+
+  <include file="$(find rotors_exercise)/launch/simulation.launch"> 
+  		<arg name="mav_name" value="$(arg mav_name)" />
+  		<arg name="world_name" value="$(arg world_name)" />
+  		<arg name="paused" value="$(arg paused)" />
+  		<arg name="run_controller" value="false" />
+  </include>
+
+  <include file="$(find rotors_exercise)/launch/controller.launch"/> 
+
+  <include file="$(find rotors_exercise)/launch/mission.launch"> 
+  		<arg name="mav_name" value="$(arg mav_name)" />
+  		<arg name="exercise" value="$(arg exercise)" />
+  </include>
+
+  <include file="$(find rotors_exercise)/launch/rviz.launch"> 
+
+  </include>
+
+</launch>
