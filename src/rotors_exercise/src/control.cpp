@@ -177,7 +177,8 @@ void timerCallback(const ros::TimerEvent& e)
 			setpoint_pos[0],
 			setpoint_pos[1],
 			setpoint_pos[2],
-			setpoint_yaw);
+			setpoint_yaw );
+
 		ROS_INFO ("Pose\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
 			latest_pose.pose.pose.position.x,
 			latest_pose.pose.pose.position.y,
@@ -370,6 +371,21 @@ int main(int argc, char** argv)
 	  		 	error_pos[2]=setpoint_pos[2]-latest_pose.pose.pose.position.z;
 	  		 	error_yaw = setpoint_yaw-tf::getYaw(latest_pose.pose.pose.orientation);
 
+				//	For 0 -> 179 angle rad positive for 180 -> 359 angle rad negative
+				// if 3.14 < error <-3.14
+
+
+				if (error_yaw < -3.14){
+													error_yaw = -3.14 - error_yaw;;
+													}
+
+				if (error_yaw > 3.14){
+												error_yaw = 3.14 - error_yaw;
+												}
+
+				else {
+									error_yaw = error_yaw;
+								}
 				// Error integral
 					integral_error[0]=error_pos[0]*delta_time_pose+integral_error[0];
 					integral_error[1]=error_pos[1]*delta_time_pose+integral_error[1];
