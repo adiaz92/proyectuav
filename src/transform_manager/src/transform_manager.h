@@ -15,10 +15,11 @@ class TfManagerNode {
  public:
   ros::NodeHandle nh;
   ros::Subscriber fiducial_sub;
+  ros::Publisher pose_estimation_pub;
 
   TfManagerNode();
-  void parseMarker(int ID);
-  void createTransform(geometry_msgs::Transform marker_wrt_camera);
+  tf::Transform parseMarker(int ID);
+  void createTransform(tf::Transform marker_wrt_world, tf::Transform marker_wrt_camera);
   void fiducial_callBack(fiducial_msgs::FiducialTransformArray fiducial_msg);
 
   std::vector<double> pose_vector;
