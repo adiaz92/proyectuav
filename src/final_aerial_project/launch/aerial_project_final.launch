@@ -10,7 +10,7 @@
   <arg name="paused" default="false"/>
   <arg name="frame_id" default="odom" />
   <arg name="odometry" default="ground_truth/odometry" />
-  <arg name="run_controller" default="false"/> 
+  <arg name="run_controller" default="false"/>
   <arg name="verbose" default="false"/>
 
   <arg name="groundMarkerFile" default="$(find final_aerial_project)/cfg/groundMarkers.yaml"/>
