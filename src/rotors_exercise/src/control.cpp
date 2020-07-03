@@ -5,6 +5,9 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <nav_msgs/Path.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
+#include <mav_planning_msgs/PolynomialTrajectory.h>
+#include <geometry_msgs/PoseArray.h>
+#include <nav_msgs/Path.h>
 
 #include <mav_msgs/RollPitchYawrateThrust.h>
 
@@ -13,7 +16,7 @@
 #include <dynamic_reconfigure/server.h>
 #include <rotors_exercise/ControllerConfig.h>
 
-//#define M_PI  3.14159265358979323846  /* pi */
+#define M_PI  3.14159265358979323846  /* pi */
 
 //Period for the control loop
 float control_loop_period = 0.01;
@@ -42,6 +45,9 @@ double						command_yaw;
 
 tf::Vector3					integral_error;
 double						integral_error_yaw;
+
+tf::Vector3					d_error;
+double						d_error_yaw;
 
 tf::Vector3					previous_error_pos;
 double						previous_error_yaw;
@@ -81,8 +87,8 @@ void poseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
 }
 
 /* This function receives a trajectory of type MultiDOFJointTrajectoryConstPtr from the waypoint_publisher
-	and converts it to a Path in "latest_trajectory" to send it to rviz and use it to fly */
-void MultiDofJointTrajectoryCallback(
+	and converts it to a Path in "latest_trajectory" to send it to rviz and use it to fly*/
+void MultiDOFJointTrajectoryCallback(
     const trajectory_msgs::MultiDOFJointTrajectoryConstPtr& msg) {
 
     // Clear all pending waypoints.
@@ -117,6 +123,44 @@ void MultiDofJointTrajectoryCallback(
   }
   current_index = 0;
 }
+
+/* This function receives a waypointList of type WaypointList from the voxblox_rrt_planner
+	and converts it to a Path in "latest_trajectory" */
+
+void WaypointListCallback(const geometry_msgs::PoseArray& msg){
+	// Clear all pending waypoints.
+		latest_trajectory.poses.clear();
+
+	// fill the header of the latest trajectory
+		latest_trajectory.header = msg.header;
+		latest_trajectory.header.frame_id = "world" ;
+
+		const size_t n_commands = msg.poses.size();
+
+		if(n_commands < 1){
+			ROS_WARN_STREAM("Got MultiDOFJointTrajectory message, but message has no points.");
+			return;
+	  	}
+
+		ROS_INFO(" Got a list of waypoints, %zu long!",(int) n_commands);
+
+	  // Extract the waypoints and print them
+    for (size_t i = 0; i < n_commands; ++i) {
+			ROS_INFO("%zu waypoint!",i);
+        geometry_msgs::PoseStamped wp;
+        wp.pose.position.x    = msg.poses[i].position.x;
+        wp.pose.position.y    = msg.poses[i].position.y;
+        wp.pose.position.z    = msg.poses[i].position.z;
+        wp.pose.orientation = msg.poses[i].orientation;
+
+        latest_trajectory.poses.push_back(wp);
+
+    ROS_INFO ("WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
+    	wp.pose.position.x, wp.pose.position.y, wp.pose.position.z, atan(wp.pose.position.y/wp.pose.position.x));
+  }
+	current_index = 0;
+}
+
 
 /// Dynamic reconfigureCallback
 void reconfigure_callback(rotors_exercise::ControllerConfig &config, uint32_t level)
@@ -199,6 +243,11 @@ void timerCallback(const ros::TimerEvent& e)
 			integral_error[1],
 			integral_error[2],
 			integral_error_yaw );
+		ROS_INFO ("DerivE\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
+			d_error[0],
+			d_error[1],
+			d_error[2],
+			d_error_yaw );
 		ROS_INFO ("Action\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
 			x_vel_cmd,
 			y_vel_cmd,
@@ -233,7 +282,9 @@ int main(int argc, char** argv)
 	ros::Subscriber imu_sub   = nh.subscribe("imu",  1, &imuCallback);
 	ros::Subscriber pose_sub  = nh.subscribe("pose_with_covariance", 1, &poseCallback);
 
-	ros::Subscriber traj_sub  = nh.subscribe("command/trajectory", 1, &MultiDofJointTrajectoryCallback);
+	ros::Subscriber traj_sub  = nh.subscribe("command/trajectory", 1, &MultiDOFJointTrajectoryCallback);
+	ros::Subscriber waypoint_list_sub_ = nh.subscribe("waypoint_list", 1, &WaypointListCallback);
+
 	current_index = 0;
 
 	// Outputs: some platforms want linear velocity (ardrone), others rollpitchyawratethrust (firefly)
@@ -308,9 +359,9 @@ int main(int argc, char** argv)
 	ros::Timer timer;
 	timer = nh.createTimer(ros::Duration(0.2), timerCallback);  //Timer for debugging
 
-	// Run the control loop and Fly to x=0m y=0m z=1m
-	ROS_INFO("Going to starting position [0,0,1] ...");
-	setpoint_pos = tf::Vector3(0.,0.,1.);
+	// Run the control loop and Fly to x=3.50m y=3.50m z=1m
+	ROS_INFO("Going to starting position [3.50,3.50,1] ...");
+	setpoint_pos = tf::Vector3(3.5,3.5,1.0);
 	setpoint_yaw = 0.0;
 
 	latest_pose_update_time = ros::Time::now();
@@ -334,7 +385,7 @@ int main(int argc, char** argv)
 			double distance = sqrt((setpoint_pos[0]-latest_pose.pose.pose.position.x) * (setpoint_pos[0]-latest_pose.pose.pose.position.x) +
 							  (setpoint_pos[1]-latest_pose.pose.pose.position.y) * (setpoint_pos[1]-latest_pose.pose.pose.position.y) +
 							  (setpoint_pos[2]-latest_pose.pose.pose.position.z) * (setpoint_pos[2]-latest_pose.pose.pose.position.z) );
-			if (distance < 0.5)
+			if (distance < 0.2)
 			{
 				//there is still waypoints
 				if (current_index < latest_trajectory.poses.size())
@@ -345,7 +396,7 @@ int main(int argc, char** argv)
     				setpoint_pos[0]=wp.pose.position.x;
 					  setpoint_pos[1]=wp.pose.position.y;
 					  setpoint_pos[2]=wp.pose.position.z;
-					  setpoint_yaw=tf::getYaw(wp.pose.orientation);
+					  setpoint_yaw = atan(setpoint_pos[1]/setpoint_pos[0]);
 					  current_index++;
 				}else if  (current_index == latest_trajectory.poses.size()) // print once waypoint achieved
 				{
@@ -372,20 +423,25 @@ int main(int argc, char** argv)
 	  		 	error_yaw = setpoint_yaw-tf::getYaw(latest_pose.pose.pose.orientation);
 
 				//	For 0 -> 179 angle rad positive for 180 -> 359 angle rad negative
-				// if 3.14 < error <-3.14
-
-
-				if (error_yaw < -3.14){
-													error_yaw = -3.14 - error_yaw;;
+				// if 3.14 < error <-3.14 turn backwards
+				if (error_yaw < -M_PI){
+													error_yaw = -M_PI - error_yaw;;
 													}
 
-				if (error_yaw > 3.14){
-												error_yaw = 3.14 - error_yaw;
+				if (error_yaw > M_PI){
+												error_yaw = M_PI - error_yaw;
 												}
 
 				else {
 									error_yaw = error_yaw;
 								}
+
+				// Derivative error
+				d_error[0] = (error_pos[0]-previous_error_pos[0])/delta_time_pose;
+				d_error[1] = (error_pos[1]-previous_error_pos[1])/delta_time_pose;
+				d_error[2] = (error_pos[2]-previous_error_pos[2])/delta_time_pose;
+				d_error_yaw = (error_yaw-previous_error_yaw)/delta_time_pose;
+
 				// Error integral
 					integral_error[0]=error_pos[0]*delta_time_pose+integral_error[0];
 					integral_error[1]=error_pos[1]*delta_time_pose+integral_error[1];
@@ -419,10 +475,10 @@ int main(int argc, char** argv)
 					}
 
 				//PDI output
-					command_pos[0]= x_kp*error_pos[0]+x_kd*(error_pos[0]-previous_error_pos[0])/delta_time_pose + x_ki*integral_error[0];
-					command_pos[1]= y_kp*error_pos[1]+y_kd*(error_pos[1]-previous_error_pos[1])/delta_time_pose + y_ki*integral_error[1];
-					command_pos[2] = z_kp*error_pos[2]+z_kd*(error_pos[2]-previous_error_pos[2])/delta_time_pose + z_ki*integral_error[2];
-					command_yaw = yaw_kp*error_yaw + yaw_kd*(error_yaw-previous_error_yaw)/delta_time_pose + yaw_ki*integral_error_yaw;
+					command_pos[0]= x_kp*error_pos[0]+x_kd*d_error[0] + x_ki*integral_error[0];
+					command_pos[1]= y_kp*error_pos[1]+y_kd*d_error[1] + y_ki*integral_error[1];
+					command_pos[2] = z_kp*error_pos[2]+z_kd*d_error[2] + z_ki*integral_error[2];
+					command_yaw = yaw_kp*error_yaw + yaw_kd*d_error_yaw + yaw_ki*integral_error_yaw;
 
 
 			// rotate velocities to align them with the body frame
