@@ -8,7 +8,7 @@
 #include <mav_planning_msgs/PolynomialTrajectory.h>
 #include <geometry_msgs/PoseArray.h>
 #include <nav_msgs/Path.h>
-
+#include <nav_msgs/Odometry.h>
 #include <mav_msgs/RollPitchYawrateThrust.h>
 
 #include <tf/tf.h>
@@ -35,6 +35,7 @@ int 										current_index;
 
 // Setpoints
 tf::Vector3					setpoint_pos;
+tf::Vector3					prev_setpoint_pos;
 double						setpoint_yaw;
 
 tf::Vector3					error_pos;
@@ -80,10 +81,13 @@ void imuCallback(const sensor_msgs::ImuConstPtr& msg)
 	ROS_INFO_ONCE("First Imu msg received ");
 	latest_imu = *msg; // Handle IMU data.
 }
-void poseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
+void poseCallback(nav_msgs::Odometry msg)
 {
 	ROS_INFO_ONCE("First Pose msg received ");
-	latest_pose = *msg; 	// Handle pose measurements.
+
+	latest_pose.pose = msg.pose;
+	// Handle pose measurements.
+
 }
 
 /* This function receives a trajectory of type MultiDOFJointTrajectoryConstPtr from the waypoint_publisher
@@ -116,6 +120,10 @@ void MultiDOFJointTrajectoryCallback(
     wp.pose.position.z    = msg->points[i].transforms[0].translation.z;
     wp.pose.orientation = msg->points[i].transforms[0].rotation;
 
+		geometry_msgs::PoseStamped prev_wp;
+		if (i=0){
+
+		}
     latest_trajectory.poses.push_back(wp);
 
     ROS_INFO ("WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
@@ -280,12 +288,13 @@ int main(int argc, char** argv)
 
 	// Inputs: imu and pose messages, and the desired trajectory
 	ros::Subscriber imu_sub   = nh.subscribe("imu",  1, &imuCallback);
-	ros::Subscriber pose_sub  = nh.subscribe("pose_with_covariance", 1, &poseCallback);
+	ros::Subscriber pose_sub  = nh.subscribe("odom_filtered", 1, &poseCallback);
 
 	ros::Subscriber traj_sub  = nh.subscribe("command/trajectory", 1, &MultiDOFJointTrajectoryCallback);
 	ros::Subscriber waypoint_list_sub_ = nh.subscribe("waypoint_list", 1, &WaypointListCallback);
 
 	current_index = 0;
+  const float DEG_2_RAD = M_PI / 180.0;
 
 	// Outputs: some platforms want linear velocity (ardrone), others rollpitchyawratethrust (firefly)
 	// and the current trajectory
@@ -362,7 +371,7 @@ int main(int argc, char** argv)
 	// Run the control loop and Fly to x=3.50m y=3.50m z=1m
 	ROS_INFO("Going to starting position [3.50,3.50,1] ...");
 	setpoint_pos = tf::Vector3(3.5,3.5,1.0);
-	setpoint_yaw = 0.0;
+	setpoint_yaw = 0;
 
 	latest_pose_update_time = ros::Time::now();
 
@@ -387,6 +396,9 @@ int main(int argc, char** argv)
 							  (setpoint_pos[2]-latest_pose.pose.pose.position.z) * (setpoint_pos[2]-latest_pose.pose.pose.position.z) );
 			if (distance < 0.2)
 			{
+				prev_setpoint_pos[0]=setpoint_pos[0];
+				prev_setpoint_pos[1]=setpoint_pos[1];
+
 				//there is still waypoints
 				if (current_index < latest_trajectory.poses.size())
 				{
@@ -396,8 +408,9 @@ int main(int argc, char** argv)
     				setpoint_pos[0]=wp.pose.position.x;
 					  setpoint_pos[1]=wp.pose.position.y;
 					  setpoint_pos[2]=wp.pose.position.z;
-					  setpoint_yaw = atan(setpoint_pos[1]/setpoint_pos[0]);
+						setpoint_yaw = atan(setpoint_pos[1]/setpoint_pos[0]);
 					  current_index++;
+
 				}else if  (current_index == latest_trajectory.poses.size()) // print once waypoint achieved
 				{
 					ROS_INFO("Waypoint achieved! No more waypoints. Hovering");
