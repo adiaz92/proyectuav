@@ -81,6 +81,7 @@ void imuCallback(const sensor_msgs::ImuConstPtr& msg)
 	ROS_INFO_ONCE("First Imu msg received ");
 	latest_imu = *msg; // Handle IMU data.
 }
+
 void poseCallback(nav_msgs::Odometry msg)
 {
 	ROS_INFO_ONCE("First Pose msg received ");
@@ -89,7 +90,12 @@ void poseCallback(nav_msgs::Odometry msg)
 	// Handle pose measurements.
 
 }
-
+/*void poseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
+{
+	ROS_INFO_ONCE("First Pose msg received ");
+	latest_pose = *msg; 	// Handle pose measurements.
+}
+*/
 /* This function receives a trajectory of type MultiDOFJointTrajectoryConstPtr from the waypoint_publisher
 	and converts it to a Path in "latest_trajectory" to send it to rviz and use it to fly*/
 void MultiDOFJointTrajectoryCallback(
@@ -120,10 +126,6 @@ void MultiDOFJointTrajectoryCallback(
     wp.pose.position.z    = msg->points[i].transforms[0].translation.z;
     wp.pose.orientation = msg->points[i].transforms[0].rotation;
 
-		geometry_msgs::PoseStamped prev_wp;
-		if (i=0){
-
-		}
     latest_trajectory.poses.push_back(wp);
 
     ROS_INFO ("WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
@@ -146,7 +148,7 @@ void WaypointListCallback(const geometry_msgs::PoseArray& msg){
 		const size_t n_commands = msg.poses.size();
 
 		if(n_commands < 1){
-			ROS_WARN_STREAM("Got MultiDOFJointTrajectory message, but message has no points.");
+			ROS_WARN_STREAM("Got WaypointList message, but message has no points.");
 			return;
 	  	}
 
@@ -289,7 +291,7 @@ int main(int argc, char** argv)
 	// Inputs: imu and pose messages, and the desired trajectory
 	ros::Subscriber imu_sub   = nh.subscribe("imu",  1, &imuCallback);
 	ros::Subscriber pose_sub  = nh.subscribe("odom_filtered", 1, &poseCallback);
-
+	//ros::Subscriber pose_sub  = nh.subscribe("pose_with_covariance", 1, &poseCallback);
 	ros::Subscriber traj_sub  = nh.subscribe("command/trajectory", 1, &MultiDOFJointTrajectoryCallback);
 	ros::Subscriber waypoint_list_sub_ = nh.subscribe("waypoint_list", 1, &WaypointListCallback);
 
@@ -394,6 +396,8 @@ int main(int argc, char** argv)
 			double distance = sqrt((setpoint_pos[0]-latest_pose.pose.pose.position.x) * (setpoint_pos[0]-latest_pose.pose.pose.position.x) +
 							  (setpoint_pos[1]-latest_pose.pose.pose.position.y) * (setpoint_pos[1]-latest_pose.pose.pose.position.y) +
 							  (setpoint_pos[2]-latest_pose.pose.pose.position.z) * (setpoint_pos[2]-latest_pose.pose.pose.position.z) );
+
+
 			if (distance < 0.2)
 			{
 				prev_setpoint_pos[0]=setpoint_pos[0];
@@ -438,11 +442,11 @@ int main(int argc, char** argv)
 				//	For 0 -> 179 angle rad positive for 180 -> 359 angle rad negative
 				// if 3.14 < error <-3.14 turn backwards
 				if (error_yaw < -M_PI){
-													error_yaw = -M_PI - error_yaw;;
+							error_yaw = -M_PI - error_yaw;;
 													}
 
 				if (error_yaw > M_PI){
-												error_yaw = M_PI - error_yaw;
+						 error_yaw = M_PI - error_yaw;
 												}
 
 				else {

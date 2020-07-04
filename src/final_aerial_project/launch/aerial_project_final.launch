@@ -6,7 +6,7 @@
   <arg name="enable_ground_truth" default="true" />
   <arg name="log_file" default="$(arg mav_name)" />
   <arg name="debug" default="false"/>
-  <arg name="gui" default="false"/>
+  <arg name="gui" default="true"/>
   <arg name="paused" default="false"/>
   <arg name="frame_id" default="odom" />
   <arg name="odometry" default="ground_truth/odometry" />
@@ -16,7 +16,8 @@
   <arg name="groundMarkerFile" default="$(find final_aerial_project)/cfg/groundMarkers.yaml"/>
   <arg name="dispatcherConfigFile" default="$(find final_aerial_project)/cfg/Parcel_delivery_dispatcher/parcel_dispatcher.yaml"/>
 
-  <!-- The following line causes gzmsg and gzerr messages to be printed to the console
+
+ <!-- The following line causes gzmsg and gzerr messages to be printed to the console
       (even when Gazebo is started through roslaunch) -->
 
  <env name="GAZEBO_MODEL_PATH" value="${GAZEBO_MODEL_PATH}:$(find rotors_gazebo)/models:$(find final_aerial_project)/models"/>
@@ -60,19 +61,17 @@
 
     <group unless="$(arg run_controller)">
       <node name="controller" pkg="rotors_exercise" type="controller_node" clear_params="true" output="screen">
-		  	<remap from="pose_with_covariance" to="ground_truth/pose_with_covariance"/>
-		  	<param name="filtering" type="bool" value="true" />
-		  	<param name="enable_ros_info" type="bool" value="false" />
+	<param name="filtering" type="bool" value="true" />
+	<param name="enable_ros_info" type="bool" value="false" />
         <param name="start_pose_x" type="double" value="3.5" />
         <param name="start_pose_y" type="double" value="3.5" />
         <param name="start_pose_z" type="double" value="0.3" />
-		  	<rosparam file="$(find rotors_exercise)/controller.yaml"/>
-		  </node>
+	<rosparam file="$(find rotors_exercise)/controller.yaml"/>
+      </node>
 
       <node name="roll_pitch_yawrate_thrust_controller_node" pkg="rotors_control" type="roll_pitch_yawrate_thrust_controller_node" output="screen">
         <rosparam command="load" file="$(find rotors_gazebo)/resource/roll_pitch_yawrate_thrust_controller_$(arg mav_name).yaml" />
         <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
-        <remap from="odometry" to="ground_truth/odometry" />
       </node>
     </group>
 
@@ -106,6 +105,27 @@
       <remap from="husky_gt" to="husky/odometry/filtered"/>
       <remap from="product_feedback" to="firefly/product_feedback" />
       <remap from="battery_timer" to="firefly/battery_timer" />
+  </node>
+
+ <!-- Aruco detectors -->
+
+  <include file="$(find aruco_detect)/launch/aruco_detect_frontal.launch"/>
+  <include file="$(find aruco_detect)/launch/aruco_detect_ventral.launch"/>
+  <node name="transform_manager" pkg="transform_manager" type="transform_manager" output="screen"/>
+
+ <!--Kalman filters -->
+
+  <include file="$(find kalman_filter)/launch/kf_example.launch"/>
+  
+  <node name="transform_pose" pkg="transform_pose" type="transform_pose" output="screen"/>firefly
+
+ <!--Mission planner -->
+  <node name="mission_planner" pkg="mission_planner" type="mission_planner" output="screen"/>
+
+ <!--path planner -->
+  <node name="path_planner" pkg="final_aerial_project" type="path_planner_node" output="screen">
+	<remap from="command/pose" to="/firefly/command/pose" />
+	<remap from="odom_filtered" to="/firefly/odom_filtered" />
   </node>
 
 </launch>
