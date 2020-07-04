@@ -1,0 +1,9 @@
+<launch>
+	<arg name="mav_name" default="firefly"/>	
+  	<arg name="exercise" default="$(find rotors_exercise)/resource/exercise1.txt"/>
+
+	<group ns="$(arg mav_name)">
+		<node name="waypoint_publisher_file" pkg="rotors_exercise" type="waypoint_publisher_file_fixed" output="screen" args="$(arg exercise)"/>
+	</group>
+
+</launch>

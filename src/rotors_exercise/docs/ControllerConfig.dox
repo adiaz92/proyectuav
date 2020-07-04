@@ -1,0 +1,26 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~gravity_compensation" : \b [double] gravity_compensation min: 10.0, default: 15.0, max: 20.0
+- \b "~x_kp" : \b [double] x_kp min: 0.0, default: 0.2, max: 5.0
+- \b "~x_ki" : \b [double] x_ki min: 0.0, default: 0.0, max: 5.0
+- \b "~x_kd" : \b [double] x_kd min: 0.0, default: 0.4, max: 5.0
+- \b "~x_integral_limit" : \b [double] x_integral_limit min: 0.0, default: 0.1, max: 10.0
+- \b "~y_kp" : \b [double] y_kp min: 0.0, default: 0.2, max: 5.0
+- \b "~y_ki" : \b [double] y_ki min: 0.0, default: 0.0, max: 5.0
+- \b "~y_kd" : \b [double] y_kd min: 0.0, default: 0.4, max: 5.0
+- \b "~y_integral_limit" : \b [double] y_integral_limit min: 0.0, default: 0.1, max: 10.0
+- \b "~z_kp" : \b [double] z_kp min: 0.0, default: 4.0, max: 10.0
+- \b "~z_ki" : \b [double] z_ki min: 0.0, default: 2.2, max: 10.0
+- \b "~z_kd" : \b [double] z_kd min: 0.0, default: 4.0, max: 5.0
+- \b "~z_integral_limit" : \b [double] z_integral_limit min: 0.0, default: 0.5, max: 10.0
+- \b "~yaw_kp" : \b [double] yaw_kp min: 0.0, default: 8.0, max: 10.0
+- \b "~yaw_ki" : \b [double] yaw_ki min: 0.0, default: 0.0, max: 10.0
+- \b "~yaw_kd" : \b [double] yaw_kd min: 0.0, default: 4.0, max: 10.0
+- \b "~yaw_integral_limit" : \b [double] yaw_integral_limit min: 0.0, default: 0.5, max: 10.0
+- \b "~x_vel_limit" : \b [double] x_vel_limit min: 0.0, default: 0.2, max: 5.0
+- \b "~y_vel_limit" : \b [double] y_vel_limit min: 0.0, default: 0.2, max: 5.0
+- \b "~z_vel_limit" : \b [double] z_vel_limit min: 0.0, default: 3.0, max: 5.0
+- \b "~yaw_vel_limit" : \b [double] yaw_vel_limit min: 0.0, default: 3.0, max: 5.0
+

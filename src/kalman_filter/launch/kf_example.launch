@@ -1,0 +1,11 @@
+<!--
+    Master on Robotics : Unmanned Aerial Robots
+
+    Simple KF estimator
+  
+  -->
+<launch>
+
+    <node name="estimator" pkg="kalman_filter" type="estimator_node" clear_params="true" output="screen"/>
+
+</launch>

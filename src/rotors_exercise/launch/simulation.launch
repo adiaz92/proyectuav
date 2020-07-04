@@ -1,0 +1,19 @@
+
+<launch>
+
+  <arg name="mav_name" default="firefly"/>
+  <arg name="world_name" default="basic"/>
+  <arg name="paused" default="true"/>
+
+  <arg name="run_controller" default="true"/>
+
+  <arg name="exercise" default="$(find rotors_exercise)/resource/exercise1.txt"/>
+
+  <include file="$(find rotors_exercise)/launch/mav_with_fake_gps_hovering.launch"> 
+  	<arg name="mav_name" value="$(arg mav_name)" />
+  	<arg name="world_name" value="$(arg world_name)" />
+  	<arg name="paused" value="$(arg paused)" />
+  	<arg name="run_controller" value="$(arg run_controller)" />
+  </include>
+
+</launch>

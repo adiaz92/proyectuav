@@ -1,0 +1,16 @@
+<launch>
+
+  <include file="$(find aruco_detect)/launch/aruco_detect_frontal.launch"/>
+
+  <include file="$(find aruco_detect)/launch/aruco_detect_ventral.launch"/>
+
+  <include file="$(find kalman_filter)/launch/kf_example.launch"/>
+
+  <node name="transform_manager" pkg="transform_manager" type="transform_manager" output="screen"/>
+
+  <node name="transform_pose" pkg="transform_pose" type="transform_pose" output="screen"/>
+
+  <node name="mission_planner" pkg="mission_planner" type="mission_planner" output="screen"/>
+
+  
+</launch>

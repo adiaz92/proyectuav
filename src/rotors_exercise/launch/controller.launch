@@ -1,0 +1,15 @@
+<launch>
+    <group ns="firefly">
+		<!-- Launch your nodes here. Extend / adapt for the subtask at hand, if necessary. --> 
+		<node name="controller" pkg="rotors_exercise" type="controller_node" clear_params="true" output="screen">
+			<remap from="pose_with_covariance" to="ground_truth/pose_with_covariance"/>
+
+			<param name="cog_z" type="double" value="0.08" /> 
+			<param name="filtering" type="bool" value="true" />
+			<param name="enable_ros_info" type="bool" value="true" /> 
+
+			<rosparam file="$(find rotors_exercise)/controller.yaml"/>
+
+		</node>
+	</group>   
+</launch>
