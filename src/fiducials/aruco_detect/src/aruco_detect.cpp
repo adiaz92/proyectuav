@@ -95,6 +95,7 @@ class FiducialsNode {
     std::vector<int> ignoreIds;
     std::map<int, double> fiducialLens;
     ros::NodeHandle nh;
+    ros::NodeHandle n;
     ros::NodeHandle pnh;
 
     image_transport::Publisher image_pub;
@@ -497,13 +498,13 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
         res.message = "Disabled aruco detections.";
         ROS_INFO("Disabled aruco detections.");
     }
-    
+
     res.success = true;
     return true;
 }
 
 
-FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
+FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh), n(ros::this_node::getName())
 {
     frameNum = 0;
 
@@ -573,9 +574,9 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh)
 
     image_pub = it.advertise("/fiducial_images", 1);
 
-    vertices_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialArray>("fiducial_vertices", 1));
+    vertices_pub = new ros::Publisher(n.advertise<fiducial_msgs::FiducialArray>("fiducial_vertices", 1));
 
-    pose_pub = new ros::Publisher(nh.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1));
+    pose_pub = new ros::Publisher(n.advertise<fiducial_msgs::FiducialTransformArray>("fiducial_transforms", 1));
 
     dictionary = aruco::getPredefinedDictionary(dicno);
 

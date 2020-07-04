@@ -3,9 +3,8 @@
 TfManagerNode::TfManagerNode()
 {
   nh.getParam("groundMarkers/poseList", pose_vector);
-  ROS_INFO("x 1: %f", pose_vector[1]);
-  fiducial_sub = nh.subscribe("fiducial_transforms", 1, &TfManagerNode::fiducial_callBack, this);
-  pose_estimation_pub = nh.advertise<geometry_msgs::Pose>("pose_estimation_aruco", 1000);
+  fiducial_sub = nh.subscribe("/aruco_detect_ventral/fiducial_transforms", 1, &TfManagerNode::fiducial_callBack, this);
+  pose_estimation_pub = nh.advertise<geometry_msgs::PoseStamped>("pose_estimation_aruco", 1000);
 }
 
 tf::Transform TfManagerNode::parseMarker(int ID)
@@ -59,10 +58,11 @@ void TfManagerNode::createTransform(tf::Transform marker_wrt_world, tf::Transfor
   geometry_msgs::Transform base_link_wrt_world_geometry;
   tf::transformTFToMsg(base_link_wrt_world, base_link_wrt_world_geometry);
   //Publish the pose estimation
-  geometry_msgs::Pose pose_estimation;
-  pose_estimation.position.x = base_link_wrt_world_geometry.translation.x;
-  pose_estimation.position.y = base_link_wrt_world_geometry.translation.y;
-  pose_estimation.position.z = base_link_wrt_world_geometry.translation.z;
-  pose_estimation.orientation = base_link_wrt_world_geometry.rotation;
+  geometry_msgs::PoseStamped pose_estimation;
+  pose_estimation.pose.position.x = base_link_wrt_world_geometry.translation.x;
+  pose_estimation.pose.position.y = base_link_wrt_world_geometry.translation.y;
+  pose_estimation.pose.position.z = base_link_wrt_world_geometry.translation.z;
+  pose_estimation.pose.orientation = base_link_wrt_world_geometry.rotation;
+  pose_estimation.header.stamp = ros::Time::now();
   pose_estimation_pub.publish(pose_estimation);
 }
