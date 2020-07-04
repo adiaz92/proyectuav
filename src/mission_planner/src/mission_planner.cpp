@@ -130,16 +130,18 @@ void Mission::do_mission()
       //go start
     break;
     case 4:
-      //waiting ventral status
+      //waiting frontal status
       if(search_done)
       {
         ROS_INFO("SEARCH DONE");
         search_done = false;
-        target_reached_actual_pose = false;
+        target_reached_base_pose = false;
         axis_x_iteration = 0;
         axis_z_iteration = 0;
         mission_code = 6;
+        going_to_base_pose = true;
         base_pose.header.stamp = ros::Time::now();
+        base_pose.pose.position.z = 3.0;
         desired_pose_pub.publish(base_pose);
         break;
       }
