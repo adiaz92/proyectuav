@@ -49,7 +49,8 @@ void Mission::search_callBack(geometry_msgs::Point search_point)
 
 void Mission::pose_estimation_callback(geometry_msgs::Pose estimated_pose)
 {
-  if(equal_pose_with_tolerance(estimated_pose, actual_pose.pose)) target_reached = true;
+  if(equal_pose_with_tolerance(estimated_pose, actual_pose.pose)) target_reached_actual_pose = true;
+  if(equal_pose_with_tolerance(estimated_pose, base_pose.pose)) target_reached_base_pose = true;
 }
 
 bool Mission::equal_pose_with_tolerance(geometry_msgs::Pose pose1, geometry_msgs::Pose pose2)
@@ -134,7 +135,7 @@ void Mission::do_mission()
       {
         ROS_INFO("SEARCH DONE");
         search_done = false;
-        target_reached = false;
+        target_reached_actual_pose = false;
         axis_x_iteration = 0;
         axis_z_iteration = 0;
         mission_code = 6;
@@ -142,7 +143,7 @@ void Mission::do_mission()
         desired_pose_pub.publish(base_pose);
         break;
       }
-      if(target_reached) //SEND NEW POSE TO REALIZE A S
+      if(target_reached_actual_pose) //SEND NEW POSE TO REALIZE A S
       {
         going_to_request_pose = false;
         if(axis_x_iteration < 6)
@@ -171,7 +172,7 @@ void Mission::do_mission()
         }
         actual_pose.header.stamp = ros::Time::now();
         desired_pose_pub.publish(actual_pose);
-        target_reached = false;
+        target_reached_actual_pose = false;
       }
     break;
     case 5:
@@ -180,7 +181,7 @@ void Mission::do_mission()
       {
         ROS_INFO("SEARCH DONE");
         search_done = false;
-        target_reached = false;
+        target_reached_actual_pose = false;
         axis_x_iteration = 0;
         axis_y_iteration = 0;
         mission_code = 6;
@@ -190,7 +191,7 @@ void Mission::do_mission()
         desired_pose_pub.publish(base_pose);
         break;
       }
-      if(target_reached) //SEND NEW POSE TO REALIZE A S
+      if(target_reached_actual_pose) //SEND NEW POSE TO REALIZE A S
       {
         going_to_request_pose = false;
         if(axis_y_iteration < 6)
@@ -217,12 +218,12 @@ void Mission::do_mission()
         }
         actual_pose.header.stamp = ros::Time::now();
         desired_pose_pub.publish(actual_pose);
-        target_reached = false;
+        target_reached_actual_pose = false;
       }
     break;
     case 6:
       //when reaching base publish feedback and mission 0
-      if(target_reached)
+      if(target_reached_base_pose)
       {
         going_to_base_pose = false;
         ROS_INFO("PUBLISHING FEEDBACK");
@@ -230,6 +231,7 @@ void Mission::do_mission()
         feedback.approximate_position = marker_position;
         feedback_pub.publish(feedback);
         mission_code = 0;
+        target_reached_base_pose = false;
       }
     break;
   }

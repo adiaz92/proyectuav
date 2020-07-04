@@ -47,7 +47,8 @@ class Mission
     double y_added = -0.5;
 
     bool waiting_vertical_detection = false;
-    bool target_reached = false;
+    bool target_reached_base_pose = false;
+    bool target_reached_actual_pose = false;
     bool search_done = false;
     bool going_to_request_pose = false;
     bool going_to_base_pose = false;
