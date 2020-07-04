@@ -35,8 +35,8 @@ void TfPose::frontal_fiducial_callBack(fiducial_msgs::FiducialTransformArray fid
         base_link_wrt_world.setOrigin(base_link_position_vector);
         base_link_wrt_world.setRotation(base_link_orientation_quaternion);
         createTransform(base_link_wrt_world, marker_wrt_camera);
+        frontal_search = false;
       }
-      frontal_search = false;
     }
   }
 }
