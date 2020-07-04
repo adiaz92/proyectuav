@@ -14,7 +14,7 @@ namespace voxblox
         nh_private_.param("collision_radius", p_collision_radius_, 1.0);
 
         //subscribers
-        odometry_sub_ = nh_.subscribe("kalman_filter/odom_filtered",1,&PathPlanner::OdometryCallback,this);
+        odometry_sub_ = nh_.subscribe("odom_filtered",1,&PathPlanner::OdometryCallback,this);
         desired_pose_sub_ = nh_.subscribe("command/pose",1,&PathPlanner::DesiredPoseCallback,this);
         //estimated_pose_sub = nh.subscribe("kalman_filter/pose_estimation", 1, &PathPlanner::PoseEstimationCallback, this);
         //Publishers
@@ -35,13 +35,13 @@ namespace voxblox
         if (plannersrv.response.success){
           std_srvs::Empty srv;
           path_pub_client_.call(srv);
-        } else {
+        } else
         // Goal pose is occupied or unknown
-         Eigen::Vector3d point;
+
          point[0]=goal_pose.pose.position.x;
          point[1]=goal_pose.pose.position.y;
          point[2]=goal_pose.pose.position.z;
-          goal_free = isCollisionFree (point);
+         goal_free = isCollisionFree (point);
           // If the goal pose is not and obstacle find a smaller goal pose
           if (goal_free){
             ROS_INFO ("Goal pose unknown in map");
@@ -51,7 +51,7 @@ namespace voxblox
           }
         }
 
-    }
+
 
 // Method that checks whether a point is occupied or not
 // The point is collision free if it's distance to the nearest obstacle is bigger
