@@ -28,7 +28,7 @@ ros::Time	latest_pose_update_time;
 
 // Feedbacks
 sensor_msgs::Imu 							latest_imu;
-geometry_msgs::PoseWithCovarianceStamped	latest_pose;
+nav_msgs::Odometry	          latest_pose;
 
 nav_msgs::Path								latest_trajectory;
 int 										current_index;
@@ -82,11 +82,10 @@ void imuCallback(const sensor_msgs::ImuConstPtr& msg)
 	latest_imu = *msg; // Handle IMU data.
 }
 
-void poseCallback(nav_msgs::Odometry msg)
+void poseCallback(const nav_msgs::OdometryConstPtr& msg)
 {
 	ROS_INFO_ONCE("First Pose msg received ");
-
-	latest_pose.pose = msg.pose;
+	latest_pose = *msg;
 	// Handle pose measurements.
 
 }
