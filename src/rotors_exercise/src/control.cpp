@@ -5,10 +5,12 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <nav_msgs/Path.h>
 #include <trajectory_msgs/MultiDOFJointTrajectory.h>
-#include <mav_planning_msgs/PolynomialTrajectory.h>
-#include <geometry_msgs/PoseArray.h>
-#include <nav_msgs/Path.h>
+//#include <mav_planning_msgs/PolynomialTrajectory.h>
+
+//include <geometry_msgs/PoseArray.h>
+//#include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
+
 #include <mav_msgs/RollPitchYawrateThrust.h>
 
 #include <tf/tf.h>
@@ -28,30 +30,31 @@ ros::Time	latest_pose_update_time;
 
 // Feedbacks
 sensor_msgs::Imu 							latest_imu;
-nav_msgs::Odometry	          latest_pose;
+//nav_msgs::Odometry	          latest_pose;
+geometry_msgs::PoseWithCovarianceStamped latest_pose;
 
-nav_msgs::Path								latest_trajectory;
+nav_msgs::Path					latest_trajectory;
 int 										current_index;
 
 // Setpoints
 tf::Vector3					setpoint_pos;
-tf::Vector3					prev_setpoint_pos;
-double						setpoint_yaw;
+//tf::Vector3					prev_setpoint_pos;
+double						  setpoint_yaw;
 
 tf::Vector3					error_pos;
-double						error_yaw;
+double						  error_yaw;
 
 tf::Vector3					command_pos;
-double						command_yaw;
+double						  command_yaw;
 
 tf::Vector3					integral_error;
-double						integral_error_yaw;
+double						  integral_error_yaw;
 
 tf::Vector3					d_error;
-double						d_error_yaw;
+double						  d_error_yaw;
 
 tf::Vector3					previous_error_pos;
-double						previous_error_yaw;
+double						  previous_error_yaw;
 
 // Gravity
 double 	gravity_compensation = 0.0 ;
@@ -62,7 +65,8 @@ double  x_kp, x_ki, x_integral_limit, x_kd, x_integral_window_size,
 			y_kp, y_ki, y_kd, y_integral_limit, y_integral_window_size,
 			z_kp, z_ki, z_kd, z_integral_limit, z_integral_window_size,
 			yaw_kp, yaw_ki, yaw_kd, yaw_integral_limit, yaw_integral_window_size,
-			x_vel_limit, y_vel_limit, z_vel_limit, yaw_vel_limit;
+			x_vel_limit, y_vel_limit, z_vel_limit, yaw_vel_limit,
+			start_pose_x, start_pose_y, start_pose_z;
 
 
 // Velocity commands and limits
@@ -78,23 +82,23 @@ ros::Publisher trajectory_pub;
 
 void imuCallback(const sensor_msgs::ImuConstPtr& msg)
 {
-	ROS_INFO_ONCE("First Imu msg received ");
+	ROS_INFO_ONCE("[CONTROLLER] First Imu msg received ");
 	latest_imu = *msg; // Handle IMU data.
 }
 
-void poseCallback(const nav_msgs::OdometryConstPtr& msg)
+/*void odomCallback(const nav_msgs::OdometryConstPtr& msg)
 {
-	ROS_INFO_ONCE("First Pose msg received ");
-	latest_pose = *msg;
-	// Handle pose measurements.
+	ROS_INFO_ONCE("[CONTROLLER] First ODOM msg received ");
+	latest_pose.header = msg->header;
+	latest_pose.pose = msg->pose; // Handle pose measurements.
+}*/
 
-}
-/*void poseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
+void poseCallback(const geometry_msgs::PoseWithCovarianceStampedConstPtr& msg)
 {
-	ROS_INFO_ONCE("First Pose msg received ");
+	ROS_INFO_ONCE("[CONTROLLER] First Pose msg received ");
 	latest_pose = *msg; 	// Handle pose measurements.
 }
-*/
+
 /* This function receives a trajectory of type MultiDOFJointTrajectoryConstPtr from the waypoint_publisher
 	and converts it to a Path in "latest_trajectory" to send it to rviz and use it to fly*/
 void MultiDOFJointTrajectoryCallback(
@@ -110,11 +114,11 @@ void MultiDOFJointTrajectoryCallback(
   const size_t n_commands = msg->points.size();
 
   if(n_commands < 1){
-    ROS_WARN_STREAM("Got MultiDOFJointTrajectory message, but message has no points.");
+    ROS_WARN_STREAM("[CONTROLLER] Got MultiDOFJointTrajectory message, but message has no points.");
     return;
   }
 
-  ROS_INFO("New trajectory with %d waypoints", (int) n_commands);
+  ROS_INFO("[CONTROLLER] New trajectory with %d waypoints", (int) n_commands);
 
   // Extract the waypoints and print them
   for (size_t i = 0; i < n_commands; ++i) {
@@ -127,7 +131,7 @@ void MultiDOFJointTrajectoryCallback(
 
     latest_trajectory.poses.push_back(wp);
 
-    ROS_INFO ("WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
+    ROS_INFO ("[CONTROLLER] WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
     	wp.pose.position.x, wp.pose.position.y, wp.pose.position.z, tf::getYaw(wp.pose.orientation));
   }
   current_index = 0;
@@ -136,7 +140,7 @@ void MultiDOFJointTrajectoryCallback(
 /* This function receives a waypointList of type WaypointList from the voxblox_rrt_planner
 	and converts it to a Path in "latest_trajectory" */
 
-void WaypointListCallback(const geometry_msgs::PoseArray& msg){
+/*void WaypointListCallback(const geometry_msgs::PoseArray& msg){
 	// Clear all pending waypoints.
 		latest_trajectory.poses.clear();
 
@@ -147,11 +151,11 @@ void WaypointListCallback(const geometry_msgs::PoseArray& msg){
 		const size_t n_commands = msg.poses.size();
 
 		if(n_commands < 1){
-			ROS_WARN_STREAM("Got WaypointList message, but message has no points.");
+			ROS_WARN_STREAM("[CONTROLLER] Got WaypointList message, but message has no points.");
 			return;
 	  	}
 
-		ROS_INFO(" Got a list of waypoints, %zu long!",(int) n_commands);
+		ROS_INFO("[CONTROLLER] Got a list of waypoints, %zu long!",(int) n_commands);
 
 	  // Extract the waypoints and print them
     for (size_t i = 0; i < n_commands; ++i) {
@@ -161,15 +165,19 @@ void WaypointListCallback(const geometry_msgs::PoseArray& msg){
         wp.pose.position.y    = msg.poses[i].position.y;
         wp.pose.position.z    = msg.poses[i].position.z;
         wp.pose.orientation = msg.poses[i].orientation;
+			/*	wp.pose.position.x  = msg->points[i].transforms[0].translation.x;
+		    wp.pose.position.y  = msg->points[i].transforms[0].translation.y;
+		    wp.pose.position.z  = msg->points[i].transforms[0].translation.z;
+		    wp.pose.orientation = msg->points[i].transforms[0].rotation;
+*/
+  /*      latest_trajectory.poses.push_back(wp);
 
-        latest_trajectory.poses.push_back(wp);
-
-    ROS_INFO ("WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
-    	wp.pose.position.x, wp.pose.position.y, wp.pose.position.z, atan(wp.pose.position.y/wp.pose.position.x));
+    ROS_INFO ("[CONTROLLER] WP %d\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t", (int)i,
+    	wp.pose.position.x, wp.pose.position.y, wp.pose.position.z, tf::getYaw(wp.pose.orientation));
   }
 	current_index = 0;
-}
-
+	trajectory_pub.publish(latest_trajectory);
+}*/
 
 /// Dynamic reconfigureCallback
 void reconfigure_callback(rotors_exercise::ControllerConfig &config, uint32_t level)
@@ -214,7 +222,7 @@ void reconfigure_callback(rotors_exercise::ControllerConfig &config, uint32_t le
 	maxYawVel	= config.yaw_vel_limit;
 
 	ROS_INFO (" ");
-	ROS_INFO ("Reconfigure callback have been called with new Settings ");
+	ROS_INFO ("[CONTROLLER] Reconfigure callback have been called with new Settings ");
 
 }
 
@@ -223,14 +231,14 @@ void timerCallback(const ros::TimerEvent& e)
 	double roll, pitch, yaw;
 	if (latest_pose.header.stamp.nsec > 0.0)
 	{
-		ROS_INFO ("///////////////////////////////////////");
+		ROS_INFO ("[CONTROLLER] ///////////////////////////////////////");
 
 		// ADD here any debugging you need
 		ROS_INFO ("WP \t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
 			setpoint_pos[0],
 			setpoint_pos[1],
 			setpoint_pos[2],
-			setpoint_yaw );
+			setpoint_yaw);
 
 		ROS_INFO ("Pose\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
 			latest_pose.pose.pose.position.x,
@@ -251,12 +259,12 @@ void timerCallback(const ros::TimerEvent& e)
 			integral_error[0],
 			integral_error[1],
 			integral_error[2],
-			integral_error_yaw );
+			integral_error_yaw);
 		ROS_INFO ("DerivE\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
 			d_error[0],
 			d_error[1],
 			d_error[2],
-			d_error_yaw );
+			d_error_yaw);
 		ROS_INFO ("Action\t:\t%0.2f\t%0.2f\t%0.2f\t%0.2f\t",
 			x_vel_cmd,
 			y_vel_cmd,
@@ -264,9 +272,7 @@ void timerCallback(const ros::TimerEvent& e)
 			yaw_vel_cmd);
 		ROS_INFO ("..................................... ");
 
-
-
-		trajectory_pub.publish(latest_trajectory);
+	  trajectory_pub.publish(latest_trajectory);
 	}
 }
 
@@ -285,14 +291,15 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	ros::NodeHandle nh_params("~");
 
-	ROS_INFO("running controller");
+	ROS_INFO("[CONTROLLER] Running controller");
 
 	// Inputs: imu and pose messages, and the desired trajectory
 	ros::Subscriber imu_sub   = nh.subscribe("imu",  1, &imuCallback);
-	ros::Subscriber pose_sub  = nh.subscribe("odom_filtered", 1, &poseCallback);
-	//ros::Subscriber pose_sub  = nh.subscribe("pose_with_covariance", 1, &poseCallback);
+	//ros::Subscriber odom_sub  = nh.subscribe("odom_filtered", 1, &odomCallback);
+	ros::Subscriber pose_sub  = nh.subscribe("pose_with_covariance", 1, &poseCallback);
+
 	ros::Subscriber traj_sub  = nh.subscribe("command/trajectory", 1, &MultiDOFJointTrajectoryCallback);
-	ros::Subscriber waypoint_list_sub_ = nh.subscribe("waypoint_list", 1, &WaypointListCallback);
+	//ros::Subscriber waypoint_list_sub_ = nh.subscribe("waypoint_list", 1, &WaypointListCallback);
 
 	current_index = 0;
   const float DEG_2_RAD = M_PI / 180.0;
@@ -338,8 +345,11 @@ int main(int argc, char** argv)
 	nh_params.param("z_vel_limit", z_vel_limit, 0.0);
 	nh_params.param("yaw_vel_limit", yaw_vel_limit, 0.0);
 
+  nh_params.param("start_pose_x", start_pose_x, 0.0);
+	nh_params.param("start_pose_y", start_pose_y, 0.0);
+	nh_params.param("start_pose_z", start_pose_z, 0.0);
 
-    ROS_INFO("Initializing controller ... ");
+    ROS_INFO("[CONTROLLER] Initializing controller ... ");
 	/*
 	*
 	*
@@ -370,9 +380,10 @@ int main(int argc, char** argv)
 	timer = nh.createTimer(ros::Duration(0.2), timerCallback);  //Timer for debugging
 
 	// Run the control loop and Fly to x=3.50m y=3.50m z=1m
-	ROS_INFO("Going to starting position [3.50,3.50,1] ...");
-	setpoint_pos = tf::Vector3(3.5,3.5,1.0);
-	setpoint_yaw = 0;
+	ROS_INFO("[CONTROLLER] Going to starting position ...");
+	//setpoint_pos = tf::Vector3(start_pose_x, start_pose_y, start_pose_z);
+	setpoint_pos = tf::Vector3(3.5, 3.5, 1.);
+	setpoint_yaw = 0.0;
 
 	latest_pose_update_time = ros::Time::now();
 
@@ -397,26 +408,27 @@ int main(int argc, char** argv)
 							  (setpoint_pos[2]-latest_pose.pose.pose.position.z) * (setpoint_pos[2]-latest_pose.pose.pose.position.z) );
 
 
-			if (distance < 0.2)
+			if (distance < 0.5)
 			{
-				prev_setpoint_pos[0]=setpoint_pos[0];
-				prev_setpoint_pos[1]=setpoint_pos[1];
+				//prev_setpoint_pos[0]=setpoint_pos[0];
+				//prev_setpoint_pos[1]=setpoint_pos[1];
 
 				//there is still waypoints
 				if (current_index < latest_trajectory.poses.size())
 				{
-					ROS_INFO("Waypoint achieved! Moving to next waypoint");
+					ROS_INFO("[CONTROLLER] Waypoint achieved! Moving to next waypoint");
 					geometry_msgs::PoseStamped wp;
     				wp = latest_trajectory.poses[current_index];
     				setpoint_pos[0]=wp.pose.position.x;
 					  setpoint_pos[1]=wp.pose.position.y;
 					  setpoint_pos[2]=wp.pose.position.z;
-						setpoint_yaw = atan(setpoint_pos[1]/setpoint_pos[0]);
+						setpoint_yaw=tf::getYaw(wp.pose.orientation);
+						//setpoint_yaw = atan(setpoint_pos[1]/setpoint_pos[0]);
 					  current_index++;
 
 				}else if  (current_index == latest_trajectory.poses.size()) // print once waypoint achieved
 				{
-					ROS_INFO("Waypoint achieved! No more waypoints. Hovering");
+					ROS_INFO("[CONTROLLER] Waypoint achieved! No more waypoints. Hovering");
 					current_index++;
 				}
 			}
@@ -459,42 +471,42 @@ int main(int argc, char** argv)
 				d_error_yaw = (error_yaw-previous_error_yaw)/delta_time_pose;
 
 				// Error integral
-					integral_error[0]=error_pos[0]*delta_time_pose+integral_error[0];
-					integral_error[1]=error_pos[1]*delta_time_pose+integral_error[1];
-					integral_error[2]=error_pos[2]*delta_time_pose+integral_error[2];
-					integral_error_yaw=error_yaw*delta_time_pose+integral_error_yaw;
+				integral_error[0]=error_pos[0]*delta_time_pose+integral_error[0];
+				integral_error[1]=error_pos[1]*delta_time_pose+integral_error[1];
+				integral_error[2]=error_pos[2]*delta_time_pose+integral_error[2];
+				integral_error_yaw=error_yaw*delta_time_pose+integral_error_yaw;
 
 				//Saturate integral error
-					if( integral_error[0] > x_integral_limit){
+				if( integral_error[0] > x_integral_limit){
 						integral_error[0]=x_integral_limit;
 					}
-					if(integral_error[0]< -x_integral_limit){
+				if(integral_error[0]< -x_integral_limit){
 						integral_error[0]=-x_integral_limit;
 					}
-					if(	integral_error[1] > y_integral_limit){
+				if(	integral_error[1] > y_integral_limit){
 						integral_error[1]=y_integral_limit;
 					}
-					if(integral_error[1]< -y_integral_limit){
+				if(integral_error[1]< -y_integral_limit){
 						integral_error[1]=-y_integral_limit;
 					}
-					if(	integral_error[2] > z_integral_limit){
+				if(	integral_error[2] > z_integral_limit){
 						integral_error[2]=z_integral_limit;
 					}
-					if(	integral_error[2] < -z_integral_limit){
+				if(	integral_error[2] < -z_integral_limit){
 						integral_error[2]=-z_integral_limit;
 					}
-					if(	integral_error_yaw > yaw_integral_limit){
+				if(	integral_error_yaw > yaw_integral_limit){
 						integral_error_yaw=yaw_integral_limit;
 					}
-					if(	integral_error_yaw < -yaw_integral_limit){
+				if(	integral_error_yaw < -yaw_integral_limit){
 						integral_error_yaw=-yaw_integral_limit;
 					}
 
 				//PDI output
-					command_pos[0]= x_kp*error_pos[0]+x_kd*d_error[0] + x_ki*integral_error[0];
-					command_pos[1]= y_kp*error_pos[1]+y_kd*d_error[1] + y_ki*integral_error[1];
-					command_pos[2] = z_kp*error_pos[2]+z_kd*d_error[2] + z_ki*integral_error[2];
-					command_yaw = yaw_kp*error_yaw + yaw_kd*d_error_yaw + yaw_ki*integral_error_yaw;
+				command_pos[0]= x_kp*error_pos[0] + x_kd*d_error[0] + x_ki*integral_error[0];
+				command_pos[1]= y_kp*error_pos[1] + y_kd*d_error[1] + y_ki*integral_error[1];
+				command_pos[2] = z_kp*error_pos[2] + z_kd*d_error[2] + z_ki*integral_error[2];
+				command_yaw = yaw_kp*error_yaw + yaw_kd*d_error_yaw + yaw_ki*integral_error_yaw;
 
 
 			// rotate velocities to align them with the body frame
