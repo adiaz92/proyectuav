@@ -7,7 +7,7 @@
   <arg name="log_file" default="$(arg mav_name)" />
   <arg name="debug" default="false"/>
   <arg name="gui" default="true"/>
-  <arg name="paused" default="false"/>
+  <arg name="paused" default="true"/>
   <arg name="frame_id" default="odom" />
   <arg name="odometry" default="ground_truth/odometry" />
   <arg name="run_controller" default="false"/>
@@ -61,17 +61,19 @@
 
     <group unless="$(arg run_controller)">
       <node name="controller" pkg="rotors_exercise" type="controller_node" clear_params="true" output="screen">
-	<param name="filtering" type="bool" value="true" />
-	<param name="enable_ros_info" type="bool" value="false" />
-        <param name="start_pose_x" type="double" value="3.5" />
-        <param name="start_pose_y" type="double" value="3.5" />
-        <param name="start_pose_z" type="double" value="0.3" />
-	<rosparam file="$(find rotors_exercise)/controller.yaml"/>
+	    <remap from="pose_with_covariance" to="ground_truth/pose_with_covariance"/>
+	    <param name="filtering" type="bool" value="true" />
+	    <param name="enable_ros_info" type="bool" value="false" />
+      <param name="start_pose_x" type="double" value="3.5" />
+      <param name="start_pose_y" type="double" value="3.5" />
+      <param name="start_pose_z" type="double" value="0.3" />
+	    <rosparam file="$(find rotors_exercise)/controller.yaml"/>
       </node>
 
       <node name="roll_pitch_yawrate_thrust_controller_node" pkg="rotors_control" type="roll_pitch_yawrate_thrust_controller_node" output="screen">
         <rosparam command="load" file="$(find rotors_gazebo)/resource/roll_pitch_yawrate_thrust_controller_$(arg mav_name).yaml" />
         <rosparam command="load" file="$(find rotors_gazebo)/resource/$(arg mav_name).yaml" />
+        <remap from="odometry" to="ground_truth/odometry" />
       </node>
     </group>
 
@@ -92,7 +94,7 @@
   <node pkg="tf" type="static_transform_publisher" name="world_husky_broadcaster" args="-20 -15 0 0 0 0 1 base_link world 100" />
 
 <!--  Mapping  -->
-   <include file="$(find final_aerial_project)/launch/planner.launch"/>
+   <include file="$(find final_aerial_project)/launch/mapping.launch"/>
 
   <!-- Dump groundMarkers info into the parameter server -->
   <rosparam command="load" file="$(arg groundMarkerFile)" />
@@ -116,16 +118,16 @@
  <!--Kalman filters -->
 
   <include file="$(find kalman_filter)/launch/kf_example.launch"/>
-  
+
   <node name="transform_pose" pkg="transform_pose" type="transform_pose" output="screen"/>firefly
 
  <!--Mission planner -->
-  <node name="mission_planner" pkg="mission_planner" type="mission_planner" output="screen"/>
+ <!-- <node name="mission_planner" pkg="mission_planner" type="mission_planner" output="screen"/> -->
 
  <!--path planner -->
-  <node name="path_planner" pkg="final_aerial_project" type="path_planner_node" output="screen">
+ <!--<node name="path_planner" pkg="final_aerial_project" type="path_planner_node" output="screen">
 	<remap from="command/pose" to="/firefly/command/pose" />
 	<remap from="odom_filtered" to="/firefly/odom_filtered" />
-  </node>
+  </node> -->
 
 </launch>
