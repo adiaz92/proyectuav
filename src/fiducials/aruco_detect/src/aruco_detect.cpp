@@ -321,7 +321,7 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         return; //return without doing anything
     }
 
-    ROS_INFO("Got image %d", msg->header.seq);
+    //ROS_INFO("Got image %d", msg->header.seq);
     frameNum++;
 
     cv_bridge::CvImagePtr cv_ptr;
@@ -344,11 +344,11 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
         vector <Vec3d>  rvecs, tvecs;
 
         aruco::detectMarkers(cv_ptr->image, dictionary, corners, ids, detectorParams);
-        ROS_INFO("Detected %d markers", (int)ids.size());
+        //ROS_INFO("Detected %d markers", (int)ids.size());
 
         for (size_t i=0; i<ids.size(); i++) {
 	    if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
-	        ROS_INFO("Ignoring id %d", ids[i]);
+	        //ROS_INFO("Ignoring id %d", ids[i]);
 	        continue;
 	    }
             fiducial_msgs::Fiducial fid;
@@ -389,19 +389,19 @@ void FiducialsNode::imageCallback(const sensor_msgs::ImageConstPtr & msg) {
                 aruco::drawAxis(cv_ptr->image, cameraMatrix, distortionCoeffs,
                                 rvecs[i], tvecs[i], (float)fiducial_len);
 
-                ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
-                         tvecs[i][0], tvecs[i][1], tvecs[i][2],
-                         rvecs[i][0], rvecs[i][1], rvecs[i][2]);
+                //ROS_INFO("Detected id %d T %.2f %.2f %.2f R %.2f %.2f %.2f", ids[i],
+                //         tvecs[i][0], tvecs[i][1], tvecs[i][2],
+                //         rvecs[i][0], rvecs[i][1], rvecs[i][2]);
 
                 if (std::count(ignoreIds.begin(), ignoreIds.end(), ids[i]) != 0) {
-                    ROS_INFO("Ignoring id %d", ids[i]);
+                  //  ROS_INFO("Ignoring id %d", ids[i]);
                     continue;
                 }
 
                 double angle = norm(rvecs[i]);
                 Vec3d axis = rvecs[i] / angle;
-                ROS_INFO("angle %f axis %f %f %f",
-                         angle, axis[0], axis[1], axis[2]);
+                //ROS_INFO("angle %f axis %f %f %f",
+                //         angle, axis[0], axis[1], axis[2]);
 
                 fiducial_msgs::FiducialTransform ft;
                 ft.fiducial_id = ids[i];
@@ -470,18 +470,18 @@ void FiducialsNode::handleIgnoreString(const std::string& str)
         if (range.size() == 2) {
            int start = std::stoi(range[0]);
            int end = std::stoi(range[1]);
-           ROS_INFO("Ignoring fiducial id range %d to %d", start, end);
+           //ROS_INFO("Ignoring fiducial id range %d to %d", start, end);
            for (int j=start; j<=end; j++) {
                ignoreIds.push_back(j);
            }
         }
         else if (range.size() == 1) {
            int fid = std::stoi(range[0]);
-           ROS_INFO("Ignoring fiducial id %d", fid);
+           //ROS_INFO("Ignoring fiducial id %d", fid);
            ignoreIds.push_back(fid);
         }
         else {
-           ROS_ERROR("Malformed ignore_fiducials: %s", element.c_str());
+           //ROS_ERROR("Malformed ignore_fiducials: %s", element.c_str());
         }
     }
 }
@@ -492,11 +492,11 @@ bool FiducialsNode::enableDetectionsCallback(std_srvs::SetBool::Request &req,
     enable_detections = req.data;
     if (enable_detections){
         res.message = "Enabled aruco detections.";
-        ROS_INFO("Enabled aruco detections.");
+        //ROS_INFO("Enabled aruco detections.");
     }
     else {
         res.message = "Disabled aruco detections.";
-        ROS_INFO("Disabled aruco detections.");
+        //ROS_INFO("Disabled aruco detections.");
     }
 
     res.success = true;
@@ -552,15 +552,15 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh), n(ros::this_node::getNa
             if (range.size() == 2) {
                int start = std::stoi(range[0]);
                int end = std::stoi(range[1]);
-               ROS_INFO("Setting fiducial id range %d - %d length to %f",
-                        start, end, len);
+               //ROS_INFO("Setting fiducial id range %d - %d length to %f",
+               //start, end, len);
                for (int j=start; j<=end; j++) {
                    fiducialLens[j] = len;
                }
             }
             else if (range.size() == 1){
                int fid = std::stoi(range[0]);
-               ROS_INFO("Setting fiducial id %d length to %f", fid, len);
+               //ROS_INFO("Setting fiducial id %d length to %f", fid, len);
                fiducialLens[fid] = len;
             }
             else {
@@ -634,7 +634,7 @@ FiducialsNode::FiducialsNode() : nh(), pnh("~"), it(nh), n(ros::this_node::getNa
     pnh.param<int>("perspectiveRemovePixelPerCell", detectorParams->perspectiveRemovePixelPerCell, 8);
     pnh.param<double>("polygonalApproxAccuracyRate", detectorParams->polygonalApproxAccuracyRate, 0.01); /* default 0.05 */
 
-    ROS_INFO("Aruco detection ready");
+    //ROS_INFO("Aruco detection ready");
 }
 
 int main(int argc, char ** argv) {

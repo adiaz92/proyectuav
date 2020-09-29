@@ -1,5 +1,5 @@
 <launch>
-  <arg name="voxblox_path" default="/home/helen/data/jfr_2018/machine_hall/voxblox/rs_esdf_0.10.voxblox" />
+  <arg name="voxblox_path" default="/home/luis/map" />
   <arg name="frame_id" default="map" />
 
   <node name="voxblox_rrt_planner" pkg="voxblox_rrt_planner" type="voxblox_rrt_planner_node" output="screen">
@@ -17,6 +17,7 @@
     <param name="split_at_collisions" value="true" />
     <param name="optimize_time" value="true" />
     <param name="verbose" value="true" />
+    <remap from="esdf_map_in" to="/firefly/tsdf_map" />
   </node>
 
 </launch>

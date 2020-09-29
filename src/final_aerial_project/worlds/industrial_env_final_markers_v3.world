@@ -1,5 +1,9 @@
 <sdf version='1.6'>
   <world name='default'>
+
+    <!-- Include the voxblox_ground_truth_plugin in this world in order to use it-->
+    <plugin name="voxblox_ground_truth_plugin" filename="libvoxblox_ground_truth_plugin.so"/>
+
     <light name='sun' type='directional'>
       <cast_shadows>0</cast_shadows>
       <pose frame=''>0 0 10 0 -0 0</pose>
@@ -1275,7 +1279,7 @@
         <collision name='collision'>
           <geometry>
             <mesh>
-              <uri>model://aws_robomaker_warehouse_ShelfD_01/meshes/aws_robomaker_warehouse_ShelfD_01_collision.DAE</uri>
+              <uri>model://aws_robomaker_warehouse_ClutteringD_01/meshes/aws_robomaker_warehouse_ClutteringD_01_collision.DAE</uri>
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
@@ -1302,7 +1306,7 @@
         <visual name='visual'>
           <geometry>
             <mesh>
-              <uri>model://aws_robomaker_warehouse_ShelfD_01/meshes/aws_robomaker_warehouse_ShelfD_01_visual.DAE</uri>
+              <uri>file://aws_robomaker_warehouse_ShelfD_01/meshes/aws_robomaker_warehouse_ShelfD_01_visual.DAE</uri>
             </mesh>
           </geometry>
           <meta>

@@ -7,6 +7,8 @@ int main(int argc,char **argv)
 
   Mission mission;
 
+  ros::Duration(5).sleep();
+
   ros::Rate loopRate(20);
 
   while( ros::ok() )

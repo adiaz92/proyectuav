@@ -138,7 +138,7 @@ include_directories(
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-  src/path_planner.cpp
+   src/path_planner.cpp
  )
 
 ## Add cmake target dependencies of the library
@@ -168,11 +168,12 @@ target_link_libraries( fake_twist_odometer ${catkin_LIBRARIES})
 target_link_libraries( delivery_station ${catkin_LIBRARIES})
 
 add_executable(path_planner_node
-     src/path_planner_node.cpp)
+        src/path_planner_node.cpp)
 target_link_libraries(path_planner_node
-       ${catkin_LIBRARIES}
-       ${PROJECT_NAME}
-      )
+        ${catkin_LIBRARIES}
+        ${PROJECT_NAME}
+        )
+
 
 #############
 ## Install ##

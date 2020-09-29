@@ -33,7 +33,7 @@ public:
     battery_timer_pub_ = nh_.advertise<std_msgs::Int32>("/battery_timer", 1, false);
 
     // Init publishers
-    next_product_pub_ = nh_.advertise<final_aerial_project::ProductInfo>("/parcel_dispatcher/next_product", 1, false);
+    next_product_pub_ = nh_.advertise<final_aerial_project::ProductInfo>("/parcel_dispatcher/next_product", 1, true);
 
     // Init vars form param server info & others
     load_from_param_server(nh_private_);
@@ -55,7 +55,7 @@ private:
   {
     drone_position << pose_msg->position.x, pose_msg->position.y, pose_msg->position.z;
 
-    next_product_pub_.publish(product_msg_out_);
+    //next_product_pub_.publish(product_msg_out_);
   }
 
 
@@ -103,6 +103,8 @@ private:
 
       product_msg_out_.item_location = products_to_dispatch_location.at(current_product_dispatched);
       product_msg_out_.marker_id = products_to_dispatch_id.at(current_product_dispatched);
+
+      ROS_INFO("INSIDEEEEEEEEEEEEEEEEEEEEEEEEE");
 
       if (products_to_dispatch_location.at(current_product_dispatched).compare("SHELVE") == 0)
       {

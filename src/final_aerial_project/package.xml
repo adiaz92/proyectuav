@@ -52,12 +52,12 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <depend>std_msgs</depend>
-  <depend>geometry_msgs</depend>  
+  <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
-  <depend>mav_planning_msgs</depend>  
-  <depend>sensor_msgs</depend>  
+  <depend>sensor_msgs</depend>
   <depend>tf</depend>
   <depend>gazebo_msgs</depend>
+  <depend>mav_planning_msgs</depend>
   <depend>gazebo_plugins</depend>
   <build_depend>eigen_catkin</build_depend>
   <build_depend>voxblox</build_depend>

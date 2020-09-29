@@ -4,7 +4,7 @@
   <arg name="verbose" default="false"/>
   <arg name="voxel_size" default="0.20" />
   <arg name="robot_radius" default="0.6" />
-  <arg name="clear_radius" default="1.0" />
+  <arg name="clear_radius" default="4.0" />
 
   <group ns="$(arg mav_name)">
     <node name="voxblox_node" pkg="voxblox_ros" type="esdf_server" output="screen" args="-alsologtostderr" clear_params="true">
@@ -29,7 +29,7 @@
       <param name="use_tf_transforms" value="true" />
       <param name="min_time_between_msgs_sec" value="0.10" />
       <param name="clear_sphere_for_planning" value="true" />
-      <param name="occupied_sphere_radius" value="4.0" />
+      <param name="occupied_sphere_radius" value="0" />
       <param name="clear_sphere_radius" value="$(arg clear_radius)" />
       <param name="slice_level" value="1.0" />
       <param name="world_frame" value="$(arg frame_id)" />
